@@ -1,0 +1,338 @@
+{
+  "name": "Ticket Manual Triage Form",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Ручная обработка заявки",
+        "formDescription": "Укажите номер заявки, категорию и приоритет для обработки.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Номер заявки",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Категория",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "payments"
+                  },
+                  {
+                    "option": "reporting"
+                  },
+                  {
+                    "option": "consulting"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Приоритет",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "low"
+                  },
+                  {
+                    "option": "medium"
+                  },
+                  {
+                    "option": "high"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -1936,
+        240
+      ],
+      "id": "ba760464-0b0a-4553-b48d-b660a8992682",
+      "name": "On form submission",
+      "webhookId": "836de6ad-87f9-4380-8c67-2f7600e7161e"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "kvFDMySs0kaACkqb",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "/projects/lQVJhDyrjRedxDUQ/datatables/kvFDMySs0kaACkqb"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $json['Номер заявки'] }}"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "needs_manual_triage"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1712,
+        240
+      ],
+      "id": "bab893ee-e1d0-4e98-b779-c7dd76ee098e",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b29f1a4b-f7da-4545-9e59-ad2bac2cefd9",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4c05e652-186a-4447-ad2a-8e7caefa51bf",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "needs_manual_triage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1488,
+        240
+      ],
+      "id": "3ac7bc5c-493d-4394-94b4-4433061293f1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "kvFDMySs0kaACkqb",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "/projects/lQVJhDyrjRedxDUQ/datatables/kvFDMySs0kaACkqb"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $json.id }}"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "needs_manual_triage"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "queued",
+            "category": "={{ $('On form submission').first().json['Категория'] }}",
+            "priority": "={{ $('On form submission').first().json['Приоритет'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "original_message",
+              "displayName": "original_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notified_at",
+              "displayName": "notified_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1264,
+        160
+      ],
+      "id": "5dbbbcfd-6f59-44a4-adbf-ce9218f787e1",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Заявка не найдена или уже обработана.",
+        "completionMessage": "Проверьте номер заявки и попробуйте снова.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        -1296,
+        288
+      ],
+      "id": "f5982338-f132-47b2-a992-badcce7fa5b1",
+      "name": "Form",
+      "webhookId": "5ca12b8f-605c-402a-8a82-3f8059df30ec"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Заявка успешно обработана!",
+        "completionMessage": "Просмотрите остальные.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        -1040,
+        160
+      ],
+      "id": "d946a04e-7e23-402e-936d-db17614120c1",
+      "name": "Form1",
+      "webhookId": "a8f633cb-2c58-4b9e-8e1a-7d6ead361f1e"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Form1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7aec32cf-3196-479f-9e54-92b2f08653e6",
+  "meta": {
+    "instanceId": "6fa74b4e1ab1c9ebadc3f7678689a0422b658f46283f0885952d510b78be9b5f"
+  },
+  "nodeGroups": [],
+  "id": "ljslL1CBmqtl5aGe",
+  "tags": []
+}

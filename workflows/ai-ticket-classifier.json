@@ -1,0 +1,611 @@
+{
+  "name": "AI Ticket Classifier",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32d48fbc-a0d8-4dae-a775-e12ee82cbf38",
+              "name": "category",
+              "value": "={{ JSON.parse($json.content.parts[0].text).category }}",
+              "type": "string"
+            },
+            {
+              "id": "f3fa1d91-20af-475c-9215-ff3002248034",
+              "name": "priority",
+              "value": "={{ JSON.parse($json.content.parts[0].text).priority }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        128,
+        -304
+      ],
+      "id": "bf8f8f97-587a-4759-9c07-f8fedda1996f",
+      "name": "Edit Fields",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6226b605-3aca-4279-8bc7-666bc69ea320",
+              "leftValue": "={{ $json.category }}",
+              "rightValue": "^(payments|reporting|consulting)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "1c3e07d0-c8d1-4bd6-ba89-ecc21ec0e854",
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "^(low|medium|high)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        -320
+      ],
+      "id": "9147c37d-9431-4842-a024-79a5974f5e99",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3e15923-6655-419d-9453-b1ad8efe731e",
+              "name": "original_message",
+              "value": "={{($json.body.original_message ?? \"\").trim()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -608,
+        -224
+      ],
+      "id": "1fd0ca26-0885-446d-bb5c-fea0fbc99f0b",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "1c_ai_analysis",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        -224
+      ],
+      "id": "a86b3e51-fa43-4d3b-9f03-3dea99936fe2",
+      "name": "Webhook",
+      "webhookId": "32bb4ca9-9a77-418a-b82b-7954b61819fc"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n  {\n    ticket_id: $json.id,\n    message: \"Ваше сообщение зарегистрировано под номером \" + $json.id + \".\"\n  }\n}}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        -384
+      ],
+      "id": "91663b2a-3d44-42e0-b52b-dbc00491b305",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "kvFDMySs0kaACkqb",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "/projects/lQVJhDyrjRedxDUQ/datatables/kvFDMySs0kaACkqb"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "original_message": "={{ $json.original_message }}",
+            "status": "new"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "original_message",
+              "displayName": "original_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        -240
+      ],
+      "id": "ca9ab32a-ccd3-49fb-9c51-d479331fc8cc",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "kvFDMySs0kaACkqb",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "/projects/lQVJhDyrjRedxDUQ/datatables/kvFDMySs0kaACkqb"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{$('Insert row').first().json.id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "status": "queued"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "original_message",
+              "displayName": "original_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -320
+      ],
+      "id": "6cb62b88-48d2-4130-ae5f-a34758b5566b",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "kvFDMySs0kaACkqb",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "/projects/lQVJhDyrjRedxDUQ/datatables/kvFDMySs0kaACkqb"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Insert row').first().json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "needs_manual_triage"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "original_message",
+              "displayName": "original_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -192
+      ],
+      "id": "ac968516-8733-4a45-b49e-4a8b954bf049",
+      "name": "Update row(s)1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n  {\n    ticket_id: $json.id,\n    message: \"Ваше сообщение зарегистрировано под номером \" + $json.id + \".\"\n  }\n}}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        -192
+      ],
+      "id": "16b12c3e-576f-45e4-b1b8-8cbb2dbb15b4",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2884365a-d73f-461a-9119-a4db1fe07b3f",
+              "leftValue": "={{ $json.original_message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -464,
+        -224
+      ],
+      "id": "7c17273e-bd9a-445d-8cca-7b0646fd1a72",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"result\": \"error\",\n  \"message\": \"Поле original_message обязательно и не должно быть пустым\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -288,
+        -112
+      ],
+      "id": "8f953b5a-00ec-4834-bb93-c92d930b583d",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash-lite",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Определи категорию и приоритет обращения.\n\nДопустимые категории:\npayments — платежи и касса\nreporting — бухгалтерская и бюджетная отчетность\nconsulting — общие консультации\n\nДопустимые приоритеты:\nlow — информационный вопрос\nmedium — проблема с отдельной операцией или документом\nhigh — критическая блокировка работы\n\nВерни только JSON с двумя полями:\ncategory\npriority\n\nНе добавляй объяснений, советов или дополнительного текста.\n\nОбращение — \"{{ $json.original_message }}\" "
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        -240
+      ],
+      "id": "783b2df6-0939-4549-9325-ef8ab8555b49",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DX3cW3lnpxIr4qWX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row(s)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row(s)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row(s)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "17706b7f-e008-447e-a159-d6ee3f952100",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6fa74b4e1ab1c9ebadc3f7678689a0422b658f46283f0885952d510b78be9b5f"
+  },
+  "nodeGroups": [],
+  "id": "LNFdMGpebQOIpQqz",
+  "tags": []
+}
